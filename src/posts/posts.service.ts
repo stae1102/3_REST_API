@@ -101,6 +101,7 @@ export class PostsService {
 
     return await this.prismaService.posts.delete({
       where: { id },
+      select: Object.assign(this.userResponse, { deleted_at: true }),
     });
   }
 
