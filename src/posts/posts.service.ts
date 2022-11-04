@@ -52,13 +52,19 @@ export class PostsService {
   }
 
   async getPostsByPage(page = 1) {
-    return this.prismaService.posts.findMany({
+    const result = await this.prismaService.posts.findMany({
       take: this.take,
       skip: this.take * (page - 1),
       orderBy: {
         created_at: 'desc',
       },
     });
+
+    if (result.length < 1) {
+      throw new NotFoundException('게시물을 불러올 수 없습니다.');
+    }
+
+    return result;
   }
 
   async updatePost(id: number, updatePostDto: UpdatePostDto) {
