@@ -55,14 +55,27 @@ export class PostsService {
       where: { id },
     });
 
-    if (!(await bcrypt.compare(password, existedPost.password))) {
-      throw new BadRequestException('비밀번호를 잘못 입력하셨습니다.');
+  async isValidRequest(
+    id: number,
+    dto: UpdatePostDto | DeletePostDto,
+  ): Promise<true | Error> {
+    const { password } = dto;
+    if (!password) {
+      throw new BadRequestException('비밀번호를 입력해주세요.');
     }
 
-    return await this.prismaService.posts.update({
+    const existedPost = await this.prismaService.posts.findUnique({
       where: { id },
-      data: { ...updateContext },
-      select: { title: true, content: true },
     });
+
+    if (!existedPost) {
+      throw new NotFoundException('해당 게시물이 존재하지 않습니다.');
+    }
+
+    if (!bcrypt.compare(password, existedPost.password)) {
+      throw new BadRequestException('유효하지 않은 비밀번호입니다.');
+    }
+
+    return true;
   }
 }
