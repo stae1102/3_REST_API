@@ -15,6 +15,14 @@ import { DeletePostDto } from './dto/delete-post.dto';
 @Injectable()
 export class PostsService {
   private readonly take = 20;
+  private readonly userResponse = {
+    id: true,
+    title: true,
+    content: true,
+    weather: true,
+    created_at: true,
+    updated_at: true,
+  };
 
   constructor(
     private readonly httpService: HttpService,
@@ -40,25 +48,24 @@ export class PostsService {
         password: hashedPassword,
         weather,
       },
-      select: {
-        id: true,
-        title: true,
-        content: true,
-        weather: true,
-        created_at: true,
-        updated_at: true,
-      },
+      select: this.userResponse,
     });
   }
 
   async getPostsByPage(page = 1) {
-    return this.prismaService.posts.findMany({
+    const result = await this.prismaService.posts.findMany({
       take: this.take,
       skip: this.take * (page - 1),
       orderBy: {
         created_at: 'desc',
       },
     });
+
+    if (result.length < 1) {
+      throw new NotFoundException('게시물을 불러올 수 없습니다.');
+    }
+
+    return result;
   }
 
   async updatePost(id: number, updatePostDto: UpdatePostDto) {
@@ -68,10 +75,20 @@ export class PostsService {
       throw validCheck;
     }
 
-    return await this.prismaService.posts.update({
+    /**
+     *  Because of the soft delete middeleware,
+     *  the update method is changed to updateMany.
+     *
+     *  Only the updateMany method can filter rows of which deleted_at value equals to null
+     *  So I think it is better way to show the post information through findUnique method.
+     */
+    await this.prismaService.posts.update({
       where: { id },
       data: { title: updatePostDto.title, content: updatePostDto.content },
-      select: { title: true, content: true },
+    });
+    return await this.prismaService.posts.findUnique({
+      where: { id },
+      select: this.userResponse,
     });
   }
 
