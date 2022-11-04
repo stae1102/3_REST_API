@@ -1,6 +1,6 @@
 mode: chatops
 branchName: 'issue-${issue.number}'
-branchs:
+branches:
   - label: enhancement
     prefix: feature/
   - label: bug
