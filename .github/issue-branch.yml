@@ -1,11 +1,13 @@
 mode: chatops
-branchName: 'issue-${issue.number}'
+branchName: "issue-${issue.number}"
 branches:
-  - label: enhancement
+  # - label: enhancement
+  #   prefix: feature/
+  # - label: bug
+  #   prefix: bugfix/
+  # - label: ci
+  #   prefix: ci/
+  - label: "*"
     prefix: feature/
-  - label: bug
-    prefix: bugfix/
-  - label: ci
-    prefix: ci/
 autoCloseIssue: true
-commentMessage: 'Branch ${branchName} created for issue: ${issue.title}'
+commentMessage: "Branch ${branchName} created for issue: ${issue.title}"
