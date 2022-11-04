@@ -34,14 +34,21 @@ export class PostsService {
 
     const hashedPassword = await bcrypt.hash(createPostDto.password, 12);
 
-    await this.prismaService.posts.create({
+    return await this.prismaService.posts.create({
       data: {
         ...createPostDto,
         password: hashedPassword,
         weather,
       },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        weather: true,
+        created_at: true,
+        updated_at: true,
+      },
     });
-    return true;
   }
 
   async getPostsByPage(page = 1) {
