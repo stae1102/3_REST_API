@@ -29,5 +29,5 @@ jobs:
         run: |
           rm -rf node_modules && yarn install --frozen-lockfile
           yarn run build
-          yarn test --passWithNoTests
+          yarn test
       
