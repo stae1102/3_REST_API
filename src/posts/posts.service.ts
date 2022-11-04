@@ -26,6 +26,11 @@ export class PostsService {
     const weather_url = await this.configService.get('WEATHER_API_URL');
     const apiResult = await firstValueFrom(this.httpService.get(weather_url));
     const weather = apiResult.data.current.condition.text;
+    const reg = /^(?=.*[a-zA-Z])(?=.*\d).{6,20}$/;
+
+    if (!reg.test(createPostDto.password)) {
+      throw new BadRequestException('최소 1개의 숫자를 입력해주세요');
+    }
 
     const hashedPassword = await bcrypt.hash(createPostDto.password, 12);
 
