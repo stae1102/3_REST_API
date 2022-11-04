@@ -1,11 +1,16 @@
 import * as bcrypt from 'bcrypt';
 import { firstValueFrom } from 'rxjs';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { DeletePostDto } from './dto/delete-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -44,25 +49,53 @@ export class PostsService {
     });
   }
 
-  async updatePost(id, updatePostDto: UpdatePostDto) {
-    const { password, ...updateContext } = updatePostDto;
-    console.log(Object.keys(updateContext));
-    if (Object.keys(updateContext).length === 0) {
-      throw new BadRequestException('변경할 내용이 없습니다.');
+  async updatePost(id: number, updatePostDto: UpdatePostDto) {
+    const validCheck = await this.isValidRequest(id, updatePostDto);
+
+    if (validCheck !== true) {
+      throw validCheck;
+    }
+
+    return await this.prismaService.posts.update({
+      where: { id },
+      data: { title: updatePostDto.title, content: updatePostDto.content },
+      select: { title: true, content: true },
+    });
+  }
+
+  async deletePost(id: number, deletePostDto: DeletePostDto) {
+    const validCheck = await this.isValidRequest(id, deletePostDto);
+
+    if (validCheck !== true) {
+      throw validCheck;
+    }
+
+    return await this.prismaService.posts.delete({
+      where: { id },
+    });
+  }
+
+  async isValidRequest(
+    id: number,
+    dto: UpdatePostDto | DeletePostDto,
+  ): Promise<true | Error> {
+    const { password } = dto;
+    if (!password) {
+      throw new BadRequestException('비밀번호를 입력해주세요.');
     }
 
     const existedPost = await this.prismaService.posts.findUnique({
       where: { id },
     });
 
-    if (!(await bcrypt.compare(password, existedPost.password))) {
-      throw new BadRequestException('비밀번호를 잘못 입력하셨습니다.');
+    if (!existedPost) {
+      throw new NotFoundException('해당 게시물이 존재하지 않습니다.');
     }
 
-    return await this.prismaService.posts.update({
-      where: { id },
-      data: { ...updateContext },
-      select: { title: true, content: true },
-    });
+    if (!bcrypt.compare(password, existedPost.password)) {
+      throw new BadRequestException('유효하지 않은 비밀번호입니다.');
+    }
+
+    return true;
   }
 }
