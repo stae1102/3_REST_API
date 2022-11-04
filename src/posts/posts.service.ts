@@ -1,6 +1,10 @@
 import * as bcrypt from 'bcrypt';
 import { firstValueFrom } from 'rxjs';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { CreatePostDto } from './dto/create-post.dto';
