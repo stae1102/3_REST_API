@@ -48,11 +48,19 @@ export class PostsService {
     });
   }
 
-  async updatePost(id, updatePostDto: UpdatePostDto) {
-    const { password, ...updateContext } = updatePostDto;
-    console.log(Object.keys(updateContext));
-    if (Object.keys(updateContext).length === 0) {
-      throw new BadRequestException('변경할 내용이 없습니다.');
+  async updatePost(id: number, updatePostDto: UpdatePostDto) {
+    const validCheck = await this.isValidRequest(id, updatePostDto);
+
+    if (validCheck !== true) {
+      throw validCheck;
+    }
+
+    return await this.prismaService.posts.update({
+      where: { id },
+      data: { title: updatePostDto.title, content: updatePostDto.content },
+      select: { title: true, content: true },
+    });
+  }
     }
 
     const existedPost = await this.prismaService.posts.findUnique({
