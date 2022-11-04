@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { DeletePostDto } from './dto/delete-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -61,11 +62,18 @@ export class PostsService {
       select: { title: true, content: true },
     });
   }
+
+  async deletePost(id: number, deletePostDto: DeletePostDto) {
+    const validCheck = await this.isValidRequest(id, deletePostDto);
+
+    if (validCheck !== true) {
+      throw validCheck;
     }
 
-    const existedPost = await this.prismaService.posts.findUnique({
+    return await this.prismaService.posts.delete({
       where: { id },
     });
+  }
 
   async isValidRequest(
     id: number,
